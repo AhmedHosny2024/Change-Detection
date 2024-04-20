@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Read the remote sensing image
-image = cv2.imread('trainval/B-test/3882.png')
+image = cv2.imread('trainval/B/3882.png')
 
 # Convert the image to the HSV color space
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)

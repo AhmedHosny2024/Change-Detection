@@ -2,13 +2,13 @@ import cv2
 import numpy as np
 
 # Read the remote sensing image
-image = cv2.imread('trainval/B-test/0118.png')
+image = cv2.imread('trainval/B/0118.png')
 
 # Convert the image to grayscale
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 # Apply Gaussian blur to reduce noise
-blurred = cv2.GaussianBlur(gray, (7, 7), 0)
+blurred = cv2.GaussianBlur(gray, (3, 3), 0)
 
 # Perform edge detection using Canny edge detector
 edges = cv2.Canny(blurred, 50, 150)
@@ -23,7 +23,7 @@ contours, _ = cv2.findContours(dilated.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPR
 filtered_contours = []
 for contour in contours:
     perimeter = cv2.arcLength(contour, True)
-    approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
+    approx = cv2.approxPolyDP(contour, 0.1 * perimeter, True)
     if len(approx) == 4:  # Check if contour is approximately rectangular
         filtered_contours.append(contour)
 
