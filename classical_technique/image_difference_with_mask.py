@@ -3,19 +3,20 @@ import numpy as np
 import os
 from skimage.metrics import structural_similarity as compare_ssim
 
-def segment_buildings(image):
+def segment_buildings(image,kernel_size=5,gaussian=15,iterations=2,area_ranges=(800,10000)):
     # Convert image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
     # Apply Gaussian blur to reduce noise
-    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
+    blurred = cv2.GaussianBlur(gray, (gaussian, gaussian), 0)
     
     # Apply adaptive thresholding to binarize the image
     _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     # Perform morphological operations to enhance and clean the binary image
-    kernel = np.ones((5, 5), np.uint8)
-    opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=3)
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+    
+    opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=iterations)
 
     sure_bg = cv2.dilate(opening, kernel, iterations=1)
     
@@ -29,13 +30,13 @@ def segment_buildings(image):
     for contour in contours:
         area = cv2.contourArea(contour)
         print(area)
-        if area >800 and area<10000:  # Adjust this threshold according to your needs
+        if area >area_ranges[0] and area<area_ranges[1]:  # Adjust this threshold according to your needs
             cv2.drawContours(mask, [contour], -1, (255), thickness=cv2.FILLED)
     
     return mask
 
 
-def image_differencing(folder_A, folder_B, output_folder):
+def image_differencing(folder_A, folder_B, output_folder,kernel_size=5,gaussian=15,iterations=2,area_ranges=(800,10000)):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -48,30 +49,68 @@ def image_differencing(folder_A, folder_B, output_folder):
         print("Number of images in folder A and B should be same.")
         return
 
+    # i=0
     for file_A, file_B in zip(files_A, files_B):
         # Read images
         img_A = cv2.imread(os.path.join(folder_A, file_A))
         img_B = cv2.imread(os.path.join(folder_B, file_B))
 
         # Segment buildings in both images
-        building_mask_A = segment_buildings(img_A)
-        building_mask_B = segment_buildings(img_B)
+        building_mask_A = segment_buildings(img_A,kernel_size=5,gaussian=15,iterations=2,area_ranges=(800,10000))
+        building_mask_B = segment_buildings(img_B,kernel_size=5,gaussian=15,iterations=2,area_ranges=(800,10000))
         
+       
         diff_img = cv2.absdiff(building_mask_B, building_mask_A)
 
         # Save the difference image
         output_path = os.path.join(output_folder, file_A.split('.')[0] + '_diff.png')
         cv2.imwrite(output_path, diff_img)
 
+        # if i==15:
+        #   # show the segmented images
+        #   cv2.imshow('building_mask_A', building_mask_A)
+        #   cv2.waitKey(0)
+        #   cv2.imshow('building_mask_B', building_mask_B)
+        #   cv2.waitKey(0)
+        #   break
+        # i+=1
+
 def compute_jaccard_index(result_folder, label_folder):
     # This function remains the same
     pass
 
 # Example usage
-folder_A = "trainval/A-test"
-folder_B = "trainval/B-test"
+folder_A = "trainval/A"
+folder_B = "trainval/B"
 output_folder = "difference_images"
 label_folder = "trainval/label-test"
 
 image_differencing(folder_A, folder_B, output_folder)
 # compute_jaccard_index(output_folder, label_folder)
+
+
+def tune_parameters(folder_A, folder_B):
+    # Define the range of parameters to try
+    kernel_sizes = [(3, 3), (5, 5), (7, 7)]
+    iterations = [1, 2, 3]
+    area_ranges = [(500, 15000), (800, 10000), (1000, 8000)]
+
+    best_score = 0
+    best_params = None
+
+    # Try all combinations of parameters
+    for kernel_size in kernel_sizes:
+        for iteration in iterations:
+            for area_range in area_ranges:
+                # Run the image differencing function with the current parameters
+                image_differencing(folder_A, folder_B, output_folder, kernel_size, iteration, area_range)
+
+                # Compute the Jaccard index for the current parameters
+                score = compute_jaccard_index(output_folder, label_folder)
+
+                # If the current score is better than the best score, update the best score and best parameters
+                if score > best_score:
+                    best_score = score
+                    best_params = (kernel_size, iteration, area_range)
+
+    return best_params
