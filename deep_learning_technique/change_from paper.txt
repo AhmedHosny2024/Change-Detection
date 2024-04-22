@@ -1,2 +1,5 @@
 in data preprocessing:
     transforms.RandomRotation((360,360), expand=False, center=None) => remove resample.
+
+in generator:
+    ct.GT_C => 1  // the channel size of ground truth
