@@ -1,0 +1,2 @@
+in data preprocessing:
+    transforms.RandomRotation((360,360), expand=False, center=None) => remove resample.
