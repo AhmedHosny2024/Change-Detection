@@ -1,6 +1,6 @@
 import torch 
 import torch.nn as nn
-from channel_attention_layer import ChannelAttention 
+from deep_learning_technique.channel_attention_layer import ChannelAttention 
 
 class Generator(nn.Module):
     def __init__(self, isize, nc, nz, ndf, n_extra_layers=0): # nc=input_channel, nz=output_channel, ndf=number of features

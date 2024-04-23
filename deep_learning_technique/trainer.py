@@ -2,11 +2,13 @@ import os
 import time
 
 import numpy as np
-import deep_learning_technique.custom_dataset as custom_dataset
+from deep_learning_technique.custom_dataset import Custom_dataset as custom_dataset
 from deep_learning_technique.config import *
 from torch.utils.data import Dataset, DataLoader
 from deep_learning_technique.utilties import *
 import torch.optim as optim
+from deep_learning_technique.generator import Generator
+from deep_learning_technique.discriminator import Discriminator
 
 class CDGAN:
     def __init__(self):
@@ -17,17 +19,17 @@ class CDGAN:
         self.valid_dataset=custom_dataset(VAL_FOLDER_PATH)
         self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=1, shuffle=True)
         #Models
-        self.netg = NetG(ISIZE,NC*2, NZ, NDF, EXTRALAYERS).to(DEVICE=DEVICE)
-        self.netd = NetD(ISIZE, GT_C, 1, NGF, EXTRALAYERS).to(DEVICE=DEVICE)
+        self.netg = Generator(ISIZE,NC*2, NZ, NDF, EXTRALAYERS).to(DEVICE)
+        self.netd = Discriminator(ISIZE, GT_C, 1, NGF, EXTRALAYERS).to(DEVICE)
         self.netg.apply(weights_init)
         self.netd.apply(weights_init)
         #Losses
-        self.l_adv = l2_loss
+        # self.l_adv = l2_loss
         self.l_con = nn.L1Loss()
-        self.l_enc = l2_loss
+        # self.l_enc = l2_loss
         self.l_bce = nn.BCELoss()
-        self.l_cos = cos_loss
-        self.dice = DiceLoss()
+        # self.l_cos = cos_loss
+        # self.dice = DiceLoss()
         self.optimizer_d = optim.Adam(self.netd.parameters(), lr=LR, betas=(0.5, 0.999))
         self.optimizer_g = optim.Adam(self.netg.parameters(), lr=LR, betas=(0.5, 0.999))
 
@@ -53,8 +55,8 @@ class CDGAN:
                 
                 epoch_iter +=BATCH_SIZE
                 total_steps += BATCH_SIZE
-                real_label = torch.ones (size=(x1.shape[0],), dtype=torch.float32, DEVICE=DEVICE)
-                fake_label = torch.zeros(size=(x1.shape[0],), dtype=torch.float32, DEVICE=DEVICE)
+                real_label = torch.ones (size=(x1.shape[0],), dtype=torch.float32, device=DEVICE)
+                fake_label = torch.zeros(size=(x1.shape[0],), dtype=torch.float32, device=DEVICE)
                 
                 #forward
                 fake = self.netg(x)
@@ -80,6 +82,7 @@ class CDGAN:
                 errors =get_errors(err_d_total, err_g_total)            
                 loss_g.append(err_g_total.item())
                 loss_d.append(err_d_total.item())
+                break
                 
             #     counter_ratio = float(epoch_iter) / len(train_dataloader.dataset)
             #     if(i%ct.DISPOLAY_STEP==0 and i>0):
@@ -122,11 +125,13 @@ class CDGAN:
                     time_i = time.time()
                     v_fake = self.netg(x)
                     
-                    tp, fp, tn, fn = f1_score(v_fake, label)    
+                    tp, fp, tn, fn = f1_score(v_fake, label)   
+                    print("f1 score: ",tp, fp, tn, fn) 
                     TP += tp
                     FN += fn
                     TN += tn
                     FP += fp
+                    break
                 
                 precision = TP/(TP+FP+1e-8)
                 oa = (TP+TN)/(TP+FN+TN+FP+1e-8)
@@ -134,8 +139,8 @@ class CDGAN:
                 f1 = 2*precision*recall/(precision+recall+1e-8)
                 # if not os.path.exists(BEST_WEIGHT_SAVE_DIR):
                 #     os.makedirs(ct.BEST_WEIGHT_SAVE_DIR)
-                # if f1 > best_f1: 
-                #     best_f1 = f1
+                if f1 > best_f1: 
+                    best_f1 = f1
                 #     shutil.copy(os.path.join(ct.WEIGHTS_SAVE_DIR,'current_netG.pth'),os.path.join(ct.BEST_WEIGHT_SAVE_DIR,'netG.pth'))           
                 print('current F1: {}'.format(f1))
                 print('best f1: {}'.format(best_f1))
@@ -143,8 +148,7 @@ class CDGAN:
                     f.write('current epoch:{},current f1:{},best f1:{}'.format(epoch,f1,best_f1))
                     f.write('\n')  
     
-
-
-
-
+if __name__ == "__main__":
+    cdgan = CDGAN()
+    cdgan.train()
     
