@@ -82,7 +82,6 @@ class CDGAN:
                 errors =get_errors(err_d_total, err_g_total)            
                 loss_g.append(err_g_total.item())
                 loss_d.append(err_d_total.item())
-                break
                 
             #     counter_ratio = float(epoch_iter) / len(train_dataloader.dataset)
             #     if(i%ct.DISPOLAY_STEP==0 and i>0):
@@ -131,7 +130,6 @@ class CDGAN:
                     FN += fn
                     TN += tn
                     FP += fp
-                    break
                 
                 precision = TP/(TP+FP+1e-8)
                 oa = (TP+TN)/(TP+FN+TN+FP+1e-8)

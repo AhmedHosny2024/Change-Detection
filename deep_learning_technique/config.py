@@ -27,7 +27,7 @@ WEIGHT_DECAY = 0.0005
 LR_STEP_SIZE = 50
 GAMMA = 0.1
 # G_WEIGHT = 200    # loss weight
-G_WEIGHT = 5    # loss weight
+G_WEIGHT = 200    # loss weight
 D_WEIGHT = 1        # loss weight
 
 # networks configuration
