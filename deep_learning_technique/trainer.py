@@ -15,14 +15,17 @@ class CDGAN:
 
         # create a dataloader object
         self.train_dataset=custom_dataset(TRAIN_FOLDER_PATH)
-        self.train_dataloader = DataLoader(self.train_dataset, batch_size=1, shuffle=True)
+        self.train_dataloader = DataLoader(self.train_dataset, batch_size=BATCH_SIZE, shuffle=True)
         self.valid_dataset=custom_dataset(VAL_FOLDER_PATH)
-        self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=1, shuffle=True)
+        self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=BATCH_SIZE, shuffle=False)
         #Models
         self.netg = Generator(ISIZE,NC*2, NZ, NDF, EXTRALAYERS).to(DEVICE)
         self.netd = Discriminator(ISIZE, GT_C, 1, NGF, EXTRALAYERS).to(DEVICE)
-        self.netg.apply(weights_init)
-        self.netd.apply(weights_init)
+        if RESUME_TRAINING:
+            self.load_model()
+        else:
+          self.netg.apply(weights_init)
+          self.netd.apply(weights_init)
         #Losses
         # self.l_adv = l2_loss
         self.l_con = nn.L1Loss()
@@ -36,9 +39,10 @@ class CDGAN:
     def train(self):
         init_epoch = 0
         best_f1 = 0
+        best_jaccard_score = 0
         total_steps = 0
         start_time = time.time()
-        for epoch in range(init_epoch+1, EPOCH):
+        for epoch in range(init_epoch, EPOCH):
             loss_g = []
             loss_d = []
             self.netg.train()
@@ -94,12 +98,13 @@ class CDGAN:
             with open(os.path.join(OUTPUT_PATH,'train_loss.txt'),'a') as f:
                 f.write('after %s epoch, loss is %g,loss1 is %g,loss2 is %g,loss3 is %g'%(epoch,np.mean(loss_g),np.mean(loss_d),np.mean(loss_g),np.mean(loss_d)))
                 f.write('\n')
+            print('epoch:',epoch,' G|D loss is {}|{}'.format(np.mean(loss_g),np.mean(loss_d)))
             # if not os.path.exists(ct.WEIGHTS_SAVE_DIR):
             #     os.makedirs(ct.WEIGHTS_SAVE_DIR)
             # utils.save_weights(epoch,netg,optimizer_g,ct.WEIGHTS_SAVE_DIR, 'netG')
             # utils.save_weights(epoch,netd,optimizer_d,ct.WEIGHTS_SAVE_DIR, 'netD')
             duration = time.time()-start_time
-            print('training duration is %g'%duration)
+            # print('training duration is %g'%duration)
 
 
 
@@ -114,6 +119,7 @@ class CDGAN:
                 FN = 0
                 FP = 0
                 TN = 0
+                total_jaccard_score=0
                 for k, data in enumerate(self.valid_dataloader):
                     x1, x2, label = data
                     x1 = x1.to(DEVICE, dtype=torch.float)
@@ -125,27 +131,44 @@ class CDGAN:
                     v_fake = self.netg(x)
                     
                     tp, fp, tn, fn = f1_score(v_fake, label)   
-                    print("f1 score: ",tp, fp, tn, fn) 
                     TP += tp
                     FN += fn
                     TN += tn
                     FP += fp
-                
+                    jaccard_score_= compute_jaccard_index(v_fake,label)
+                    total_jaccard_score+=jaccard_score_
+
                 precision = TP/(TP+FP+1e-8)
                 oa = (TP+TN)/(TP+FN+TN+FP+1e-8)
                 recall = TP/(TP+FN+1e-8)
                 f1 = 2*precision*recall/(precision+recall+1e-8)
                 # if not os.path.exists(BEST_WEIGHT_SAVE_DIR):
                 #     os.makedirs(ct.BEST_WEIGHT_SAVE_DIR)
-                if f1 > best_f1: 
+                # print('jaccard:',jaccard_score)
+                if total_jaccard_score > best_jaccard_score: 
                     best_f1 = f1
+                    best_jaccard_score = total_jaccard_score
+                    self.save_model()
                 #     shutil.copy(os.path.join(ct.WEIGHTS_SAVE_DIR,'current_netG.pth'),os.path.join(ct.BEST_WEIGHT_SAVE_DIR,'netG.pth'))           
                 print('current F1: {}'.format(f1))
                 print('best f1: {}'.format(best_f1))
+                print('jaccard score:{}'.format(total_jaccard_score))
+                print('best jaccard score:{}'.format(best_jaccard_score))
                 with open(os.path.join(OUTPUT_PATH,'f1_score.txt'),'a') as f:
                     f.write('current epoch:{},current f1:{},best f1:{}'.format(epoch,f1,best_f1))
+                    f.write("jaccard score:{total_jaccard_score}")
                     f.write('\n')  
-    
+        
+    def save_model(self):
+        torch.save(self.netg.state_dict(), os.path.join(OUTPUT_PATH, 'netg.pth'))
+        torch.save(self.netd.state_dict(), os.path.join(OUTPUT_PATH, 'netd.pth'))
+        print('Model saved successfully')
+        return True
+    def load_model(self):
+        self.netg.load_state_dict(torch.load(os.path.join(OUTPUT_PATH, 'netg.pth')))
+        self.netd.load_state_dict(torch.load(os.path.join(OUTPUT_PATH, 'netd.pth')))
+        print('Model loaded successfully')
+        return True
 if __name__ == "__main__":
     cdgan = CDGAN()
     cdgan.train()

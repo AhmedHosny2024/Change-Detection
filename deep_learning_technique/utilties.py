@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from deep_learning_technique.config import *
+from sklearn.metrics import jaccard_score
 
 def weights_init(mod):
     """
@@ -125,3 +126,20 @@ def f1_score(score, lb):
     
     return tp, fp, tn, fn
     
+
+def compute_jaccard_index(prediction, ground_truth):
+    # This function remains the same    
+    jaccard_indices = []
+    ground_truth=ground_truth.cpu().numpy()
+    prediction=prediction.cpu().numpy()
+    for result_img,label_img in zip(prediction,ground_truth):
+      # Compute Jaccard Index
+      img_true=np.array(label_img).ravel()
+      img_pred=np.array(result_img).ravel()
+      img_pred=np.where(img_pred>THRESHOLD,255,0)
+      img_true=np.where(img_true>THRESHOLD,255,0)
+      jaccard_index = jaccard_score(img_true, img_pred,pos_label=255,zero_division=0)
+      jaccard_indices.append(jaccard_index)
+    mean_jaccard_index = np.mean(jaccard_indices)
+    # print("Mean Jaccard Index:", mean_jaccard_index)
+    return mean_jaccard_index
