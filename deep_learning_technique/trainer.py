@@ -14,9 +14,9 @@ class CDGAN:
     def __init__(self):
 
         # create a dataloader object
-        self.train_dataset=custom_dataset(TRAIN_FOLDER_PATH)
+        self.train_dataset=custom_dataset(TRAIN_FOLDER_PATH,transform_type="train")
         self.train_dataloader = DataLoader(self.train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-        self.valid_dataset=custom_dataset(VAL_FOLDER_PATH)
+        self.valid_dataset=custom_dataset(VAL_FOLDER_PATH,transform_type="test")
         self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=BATCH_SIZE, shuffle=False)
         #Models
         self.netg = Generator(ISIZE,NC*2, NZ, NDF, EXTRALAYERS).to(DEVICE)
@@ -28,14 +28,18 @@ class CDGAN:
           self.netd.apply(weights_init)
         #Losses
         # self.l_adv = l2_loss
-        self.l_con = nn.L1Loss()
+        self.l_con = nn.L1Loss() # linear penalty if the image is not similar
         # self.l_enc = l2_loss
-        self.l_bce = nn.BCELoss()
+        self.l_bce = nn.BCELoss() # binary classification loss try to distinguish between real and fake
         # self.l_cos = cos_loss
         # self.dice = DiceLoss()
         self.optimizer_d = optim.Adam(self.netd.parameters(), lr=LR, betas=(0.5, 0.999))
         self.optimizer_g = optim.Adam(self.netg.parameters(), lr=LR, betas=(0.5, 0.999))
 
+        self.sheduler_g = optim.lr_scheduler.StepLR(self.optimizer_g, step_size=LR_STEP_SIZE, gamma=GAMMA)
+        self.sheduler_d = optim.lr_scheduler.StepLR(self.optimizer_d, step_size=LR_STEP_SIZE, gamma=GAMMA)
+
+    print('Training started')
     def train(self):
         init_epoch = 0
         best_f1 = 0
@@ -119,7 +123,7 @@ class CDGAN:
                 FN = 0
                 FP = 0
                 TN = 0
-                total_jaccard_score=0
+                total_jaccard_score=[]
                 for k, data in enumerate(self.valid_dataloader):
                     x1, x2, label = data
                     x1 = x1.to(DEVICE, dtype=torch.float)
@@ -142,9 +146,12 @@ class CDGAN:
                 oa = (TP+TN)/(TP+FN+TN+FP+1e-8)
                 recall = TP/(TP+FN+1e-8)
                 f1 = 2*precision*recall/(precision+recall+1e-8)
+                total_jaccard_score=np.mean(total_jaccard_score)
                 # if not os.path.exists(BEST_WEIGHT_SAVE_DIR):
                 #     os.makedirs(ct.BEST_WEIGHT_SAVE_DIR)
                 # print('jaccard:',jaccard_score)
+                self.sheduler_d.step()
+                self.sheduler_g.step() 
                 if total_jaccard_score > best_jaccard_score: 
                     best_f1 = f1
                     best_jaccard_score = total_jaccard_score

@@ -138,8 +138,8 @@ def compute_jaccard_index(prediction, ground_truth):
       img_pred=np.array(result_img).ravel()
       img_pred=np.where(img_pred>THRESHOLD,255,0)
       img_true=np.where(img_true>THRESHOLD,255,0)
-      jaccard_index = jaccard_score(img_true, img_pred,pos_label=255,zero_division=0)
+      jaccard_index = jaccard_score(img_true, img_pred,pos_label=255,zero_division=1)
       jaccard_indices.append(jaccard_index)
-    mean_jaccard_index = np.mean(jaccard_indices)
+    # mean_jaccard_index = np.mean(jaccard_indices)
     # print("Mean Jaccard Index:", mean_jaccard_index)
-    return mean_jaccard_index
+    return jaccard_indices
