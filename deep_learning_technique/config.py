@@ -1,17 +1,18 @@
 import torch
 
 
-TRAIN_FOLDER_PATH = 'deep_learning_technique/trainval/train'
-VAL_FOLDER_PATH = 'deep_learning_technique/trainval/train'
-TEST_FOLDER_PATH = 'deep_learning_technique/trainval/test'
-# VAL_FOLDER_PATH = 'deep_learning_technique/trainval/validation'
-OUTPUT_PATH = 'deep_learning_technique/output'
+TRAIN_FOLDER_PATH = 'trainval/train'
+# VAL_FOLDER_PATH = 'trainval/train'
+TEST_FOLDER_PATH = 'trainval/test'
+VAL_FOLDER_PATH = 'trainval/validation'
+OUTPUT_PATH = 'output'
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # training configuration
-EPOCH = 500
+EPOCH = 200
 ISIZE = 256         # input image size
-BATCH_SIZE = 1
+RESUME_TRAINING = True
+BATCH_SIZE = 16
 DISPLAY = True      # if display training phase in Visdom
 DISPOLAY_STEP = 20    
 RESUME = False       # if resume from the last epoch
@@ -21,10 +22,10 @@ THRESHOLD = 0.5
 SAVE_TEST_IAMGES = True # if save change maps during test
 
 # optimizer configuration
-LR = 0.0005     # learning rate
+LR = 0.00005     # learning rate
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.0005
-LR_STEP_SIZE = 50
+LR_STEP_SIZE = 20
 GAMMA = 0.1
 # G_WEIGHT = 200    # loss weight
 G_WEIGHT = 200    # loss weight
