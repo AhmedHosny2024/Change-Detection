@@ -143,3 +143,13 @@ def compute_jaccard_index(prediction, ground_truth):
     # mean_jaccard_index = np.mean(jaccard_indices)
     # print("Mean Jaccard Index:", mean_jaccard_index)
     return jaccard_indices
+
+def L1_loss(input, target):
+    loss=0
+    for i in range(input.shape[0]):
+        if input[i]==0 and target[i]==1:
+            loss+=L1_loss(input[i],target[i])*G_WEIGHT
+        else:
+            loss+=L1_loss(input[i],target[i])
+    loss= np.mean(loss)
+    return loss
