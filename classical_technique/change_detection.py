@@ -43,7 +43,7 @@ class ChangeDetection:
             # Compute Jaccard Index
             img_true=np.array(label_img).ravel()
             img_pred=np.array(result_img).ravel()
-            jaccard_index = jaccard_score(img_true, img_pred,pos_label=255,zero_division=1)
+            jaccard_index = jaccard_score(img_true, img_pred,pos_label=1,zero_division=1)
             jaccard_indices.append(jaccard_index)
         mean_jaccard_index = np.mean(jaccard_indices)
         print("Mean Jaccard Index:", mean_jaccard_index)

@@ -47,3 +47,5 @@ image_folder = "trainval/label"
 
 # Create histogram
 create_histogram(image_folder)
+# 4868
+# 3232

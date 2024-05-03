@@ -71,8 +71,9 @@ class CDGAN:
                 pred_real = self.netd(gt)
                 pred_fake = self.netd(fake).detach()
                 err_d_fake = self.l_bce(pred_fake, fake_label)
-                err_g = self.l_con(fake, gt)
-                err_g_total = G_WEIGHT*err_g +D_WEIGHT*err_d_fake
+                # err_g = self.l_con(fake, gt)
+                err_g=L1_loss(fake,gt)
+                err_g_total = err_g*G_WEIGHT +D_WEIGHT*err_d_fake
                 
                 pred_fake_ = self.netd(fake.detach())
                 err_d_real = self.l_bce(pred_real, real_label)
@@ -90,14 +91,20 @@ class CDGAN:
                 errors =get_errors(err_d_total, err_g_total)            
                 loss_g.append(err_g_total.item())
                 loss_d.append(err_d_total.item())
+
+                #GPU memory 
+                del x1
+                del x2
+                del gt
+                torch.cuda.empty_cache()
                 
-            #     counter_ratio = float(epoch_iter) / len(train_dataloader.dataset)
-            #     if(i%ct.DISPOLAY_STEP==0 and i>0):
-            #         print('epoch:',epoch,'iteration:',i,' G|D loss is {}|{}'.format(np.mean(loss_g[-51:]),np.mean(loss_d[-51:])))
-            #         if ct.DISPLAY:
-            #             utils.plot_current_errors(epoch, counter_ratio, errors,vis)
-            #             utils.display_current_images(gt.data, fake.data, vis)
-            # utils.save_current_images(epoch, gt.data, fake.data, ct.IM_SAVE_DIR, 'training_output_images')
+                # counter_ratio = float(epoch_iter) / len(train_dataloader.dataset)
+                # if(i%DISPOLAY_STEP==0 and i>0):
+                #     print('epoch:',epoch,'iteration:',i,' G|D loss is {}|{}'.format(np.mean(loss_g[-51:]),np.mean(loss_d[-51:])))
+                #     if DISPLAY:
+                #         plot_current_errors(epoch, counter_ratio, errors,vis)
+                #         display_current_images(gt.data, fake.data, vis)
+        
             
             with open(os.path.join(OUTPUT_PATH,'train_loss.txt'),'a') as f:
                 f.write('after %s epoch, loss is %g,loss1 is %g,loss2 is %g,loss3 is %g'%(epoch,np.mean(loss_g),np.mean(loss_d),np.mean(loss_g),np.mean(loss_d)))
@@ -133,7 +140,6 @@ class CDGAN:
                     x = torch.cat((x1,x2),1)
                     time_i = time.time()
                     v_fake = self.netg(x)
-                    
                     tp, fp, tn, fn = f1_score(v_fake, label)   
                     TP += tp
                     FN += fn
@@ -141,6 +147,12 @@ class CDGAN:
                     FP += fp
                     jaccard_score_= compute_jaccard_index(v_fake,label)
                     total_jaccard_score+=jaccard_score_
+                    if (epoch+1)%50==0:
+                        save_current_images(epoch, label.data, v_fake.data, IM_SAVE_DIR, 'training_output_images',k)
+                    del x1
+                    del x2
+                    del label
+                    torch.cuda.empty_cache()
 
                 precision = TP/(TP+FP+1e-8)
                 oa = (TP+TN)/(TP+FN+TN+FP+1e-8)
@@ -163,7 +175,7 @@ class CDGAN:
                 print('best jaccard score:{}'.format(best_jaccard_score))
                 with open(os.path.join(OUTPUT_PATH,'f1_score.txt'),'a') as f:
                     f.write('current epoch:{},current f1:{},best f1:{}'.format(epoch,f1,best_f1))
-                    f.write("jaccard score:{total_jaccard_score}")
+                    f.write("jaccard score:{}".format(total_jaccard_score))
                     f.write('\n')  
         
     def save_model(self):

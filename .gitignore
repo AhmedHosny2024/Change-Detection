@@ -155,3 +155,4 @@ cython_debug/
 #.idea/
 /trainval
 /difference_images
+/deep_learning_technique/output_trail_1_normalize

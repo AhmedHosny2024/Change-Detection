@@ -10,7 +10,7 @@ from scipy.cluster.vq import kmeans2
 # THRESHOLD = 500  0.06669160304252116
 # THRESHOLD = 400 0.08084878138885547
 # THRESHOLD= 350  0.080134097312698
-THRESHOLD = 1000
+THRESHOLD = 400
 def image_differencing(images_A, images_B):
     results_img=[]
     for img_A, img_B in zip(images_A, images_B):
