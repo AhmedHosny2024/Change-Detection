@@ -156,3 +156,6 @@ cython_debug/
 /trainval
 /difference_images
 /deep_learning_technique/output_trail_1_normalize
+/deep_learning_technique/output_78_without_removing_80_20
+/deep_learning_technique/output_80_with_removing
+/deep_learning_technique/output_80_without_removing_75_25

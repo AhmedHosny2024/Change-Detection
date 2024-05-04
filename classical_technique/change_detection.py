@@ -19,7 +19,7 @@ class ChangeDetection:
         print("Training the model...")
         # Perform training callings
         results=[]
-        results = image_differencing(self.images_A, self.images_B)
+        results = image_differencing_hue(self.images_A, self.images_B)
         # results = post_classification_comparison(self.images_A, self.images_B)
         for i, out_image in enumerate(results):
         # Save the difference image
@@ -35,16 +35,24 @@ class ChangeDetection:
             return
         # Get list of files in result folder
         result_files = sorted(os.listdir(self.output_folder))
+        label_files = sorted(os.listdir(self.labels_folder))
         jaccard_indices = []
-        for result_file in result_files:
+        for result_file,label_file in zip(result_files,label_files):
             # Read result and label images
             result_img = cv2.imread(os.path.join(self.output_folder, result_file))
-            label_img = cv2.imread(os.path.join(self.labels_folder, result_file))
+            label_img = cv2.imread(os.path.join(self.labels_folder, label_file))
+            
             # Compute Jaccard Index
+            # print("rest",result_img.shape)
+            # print("label",label_img.shape)
             img_true=np.array(label_img).ravel()
             img_pred=np.array(result_img).ravel()
-            jaccard_index = jaccard_score(img_true, img_pred,pos_label=1,zero_division=1)
+            # print("img_true",img_true.max(),img_true.min())
+            # print("img_pred",img_pred.max(),img_pred.min())
+
+            jaccard_index = jaccard_score(img_true, img_pred,pos_label=255,zero_division=1)
             jaccard_indices.append(jaccard_index)
+        # print("Jaccard Indices:", jaccard_indices)
         mean_jaccard_index = np.mean(jaccard_indices)
         print("Mean Jaccard Index:", mean_jaccard_index)
 # main
