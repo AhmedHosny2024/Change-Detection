@@ -2,7 +2,7 @@ import os
 import shutil
 import random
 
-def split_dataset(data_dir, train_dir, test_dir, val_dir, split_ratio=(0.8, 0.1, 0.1)):
+def split_dataset(data_dir, train_dir, test_dir, val_dir, split_ratio=(0.75, 0.125, 0.125)):
     assert sum(split_ratio) == 1.0, "Split ratio should sum up to 1.0"
     
     # Create directories if they don't exist
@@ -20,6 +20,9 @@ def split_dataset(data_dir, train_dir, test_dir, val_dir, split_ratio=(0.8, 0.1,
     # Get list of files in Label folder
     files_Label = os.listdir(os.path.join(data_dir, 'Label'))
     num_files_Label = len(files_Label)
+
+
+
     
     # Make sure all folders have the same number of files
     assert num_files_A == num_files_B == num_files_Label, "Number of files in folders A, B, and Label must be the same"
@@ -31,16 +34,17 @@ def split_dataset(data_dir, train_dir, test_dir, val_dir, split_ratio=(0.8, 0.1,
     # Split indices into train, test, and validation sets
     train_split = int(num_files_A * split_ratio[0])
     test_split = int(num_files_A * split_ratio[1])
+
+
     train_indices = indices[:train_split]
     test_indices = indices[train_split:train_split + test_split]
     val_indices = indices[train_split + test_split:]
-    
+
     # Copy files to train, test, and validation folders
     for idx in train_indices:
         filename_A = files_A[idx]
         filename_B = files_B[idx]
         filename_Label = files_Label[idx]
-        
         shutil.copy(os.path.join(data_dir, 'A', filename_A), os.path.join(train_dir, 'A', filename_A))
         shutil.copy(os.path.join(data_dir, 'B', filename_B), os.path.join(train_dir, 'B', filename_B))
         shutil.copy(os.path.join(data_dir, 'Label', filename_Label), os.path.join(train_dir, 'Label', filename_Label))
@@ -69,4 +73,4 @@ train_dir = 'trainval/train'
 test_dir = 'trainval/test'
 val_dir = 'trainval/validation'
 
-split_dataset(data_dir, train_dir, test_dir, val_dir, split_ratio=(0.8, 0.1, 0.1))
+split_dataset(data_dir, train_dir, test_dir, val_dir,split_ratio=(0.75, 0.125, 0.125))

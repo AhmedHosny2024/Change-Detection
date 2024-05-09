@@ -151,18 +151,11 @@ def compute_jaccard_index(prediction, ground_truth):
     return jaccard_indices
 
 def L1_loss(input, target):
-    loss=0
-    for img_idx in range(input.shape[0]):
-        for channel in range(input.shape[1]):
-            for row in range(input.shape[2]):
-                 for col in range(input.shape[3]):
-                    if input[img_idx][channel][row][col]==0 and target[img_idx][channel][row][col]==1:
-                        loss+=L1_WEIGHT
-                    elif input[img_idx][channel][row][col]==1 and target[img_idx][channel][row][col]==0:
-                        loss+=L0_WEIGHT
-    loss= np.mean(loss)
-    loss=torch.tensor(loss,requires_grad=True)
+    diff = torch.abs(input - target)
+    weighted_diff = L1_WEIGHT * diff * target + L0_WEIGHT * diff * (1 - target)
+    loss = torch.mean(weighted_diff)
     return loss
+
 
 # def L1_loss(input, target):
 #     loss=0
@@ -261,19 +254,26 @@ def save_current_images(epoch, reals, fakes,save_dir,name,k):
         save_path = os.path.join(save_dir,name)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
+        # make fakes to cpu
+        fakes = fakes.detach().cpu().numpy()
+        reals = reals.detach().cpu().numpy()
         # make fakes binary
         for i in range(fakes.shape[0]):
-            fakes[i] = fakes[i].detach().cpu().numpy()
+            # fakes[i] = fakes[i].detach().cpu().numpy()
             fakes[i][fakes[i]>0.5] = 255
             fakes[i][fakes[i]<=0.5] = 0
+            reals[i][reals[i]>0.5] = 255
+            reals[i][reals[i]<=0.5] = 0
         # score = np.array(fakes.detach().squeeze(0).cpu())
         # threshold =0.5
         # # print("summation============",np.sum([score>threshold]))
         # score[score>threshold] = 255
         # score[score<=threshold] = 0.0 
         # print(score.shape)
-            cv2.imwrite(save_path+"/pred_"+str(i)+"_"+str(k)+".png",fakes[i])
+            cv2.imwrite(save_path+"/pred_"+str(i)+"_"+str(k)+".png",fakes[i][0])
+            cv2.imwrite(save_path+"/gt_"+str(i)+"_"+str(k)+".png",reals[i][0])
         # vutils.save_image(reals, '%s/reals.png' % save_path, normalize=True)
+        # vutils.save_image(fakes, '%s/fakes_%03d.png' % (save_path, epoch+1), normalize=True)
         # vutils.save_image(fakes, '%s/fakes_%03d.png' % (save_path, epoch+1), normalize=True)
 
 def save_weights(epoch,net,optimizer,save_path, model_name):

@@ -9,19 +9,33 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 from pylab import *
 from deep_learning_technique.config import *
+# train_transform = [            
+#     transforms.RandomRotation((360,360), expand=False, center=None),
+#     transforms.RandomVerticalFlip(p=1),
+#     transforms.RandomHorizontalFlip(p=1),
+#     transforms.RandomRotation((180,180), expand=False, center=None),
+#     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+#     transforms.RandomAffine(degrees=20, translate=(0.1, 0.1), scale=(0.8, 1.2)),
+#     transforms.Resize((ISIZE,ISIZE)),
+#     transforms.ToTensor(),
+#     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+# ]
 train_transform = [            
     transforms.RandomRotation((360,360), expand=False, center=None),
     transforms.RandomVerticalFlip(p=1),
     transforms.RandomHorizontalFlip(p=1),
     transforms.RandomRotation((180,180), expand=False, center=None),
+    # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+    # transforms.RandomAffine(degrees=20, translate=(0.1, 0.1), scale=(0.8, 1.2)),
     transforms.Resize((ISIZE,ISIZE)),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-    ]
+7]
 test_transform = [            
     transforms.Resize((ISIZE,ISIZE)),
     transforms.ToTensor(),
     transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5 )),
+    # transforms.Normalize((7.78778377, 0.7776678, 70.51143379), (0.08119602 ,0.08063477, 0.08069688 ))78
     ]
 class Custom_dataset(Dataset):
     def __init__(self, folder_Path,transform_type="train"):

@@ -19,7 +19,7 @@ class ChangeDetection:
         print("Training the model...")
         # Perform training callings
         results=[]
-        results = image_differencing_hue(self.images_A, self.images_B)
+        results = image_differencing_gray(self.images_A, self.images_B)
         # results = post_classification_comparison(self.images_A, self.images_B)
         for i, out_image in enumerate(results):
         # Save the difference image

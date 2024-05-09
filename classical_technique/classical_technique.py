@@ -13,7 +13,7 @@ from skimage import exposure
 # THRESHOLD = 500  0.06669160304252116
 # THRESHOLD = 400 0.08084878138885547
 # THRESHOLD= 350  0.080134097312698
-THRESHOLD = 360
+THRESHOLD = 190
 
 def preprocess_image(image):
     # Convert image to uint8 data type and ensure it's in the range [0, 255]
@@ -40,11 +40,14 @@ def preprocess_image(image):
     #         corrected_image[i] = average_value
     image=cv2.medianBlur(image, 5)
     return image
+THRESHOLD_SMALL=240
+THRESHOLD_LARGE=300
 def image_differencing_all_bands(images_A, images_B):
     results_img=[]
     for img_A, img_B in zip(images_A, images_B):
         diff_image = np.abs(img_A - img_B)
-        change_mask = np.sum(diff_image, axis=2) > THRESHOLD
+        change_mask = np.sum(diff_image, axis=2) 
+        change_mask= change_mask>THRESHOLD_SMALL and change_mask<THRESHOLD_LARGE
         change_mask=change_mask.astype(np.uint8)*255
         results_img.append(change_mask)
     return results_img
@@ -88,16 +91,14 @@ def image_differencing_color(images_A, images_B):
 
 def image_differencing_gray(images_A, images_B):
     results_img=[]
-    image_number=0
     for img_A, img_B in zip(images_A, images_B):
         img_A = cv2.cvtColor(img_A, cv2.COLOR_BGR2GRAY)
         img_B = cv2.cvtColor(img_B, cv2.COLOR_BGR2GRAY)
         diff_image = np.abs(img_A - img_B)
-        THRESHOLD= cv2.mean(diff_image)[0]
+        # THRESHOLD= cv2.mean(diff_image)[0]
         change_mask = diff_image > THRESHOLD
         change_mask=change_mask.astype(np.uint8)*255
         results_img.append(change_mask)
-        image_number+=1
     return results_img
 
 def image_differencing_hue(images_A, images_B):

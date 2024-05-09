@@ -18,6 +18,8 @@ class CDGAN:
         self.train_dataloader = DataLoader(self.train_dataset, batch_size=BATCH_SIZE, shuffle=True)
         self.valid_dataset=custom_dataset(VAL_FOLDER_PATH,transform_type="test")
         self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=BATCH_SIZE, shuffle=False)
+        # self.test_dataset=custom_dataset(TEST_FOLDER_PATH,transform_type="test")
+        # self.test_dataloader = DataLoader(self.test_dataset, batch_size=BATCH_SIZE, shuffle=False)
         #Models
         self.netg = Generator(ISIZE,NC*2, NZ, NDF, EXTRALAYERS).to(DEVICE)
         self.netd = Discriminator(ISIZE, GT_C, 1, NGF, EXTRALAYERS).to(DEVICE)
@@ -36,11 +38,13 @@ class CDGAN:
         self.optimizer_d = optim.Adam(self.netd.parameters(), lr=LR, betas=(0.5, 0.999))
         self.optimizer_g = optim.Adam(self.netg.parameters(), lr=LR, betas=(0.5, 0.999))
 
-        self.sheduler_g = optim.lr_scheduler.StepLR(self.optimizer_g, step_size=LR_STEP_SIZE, gamma=GAMMA)
-        self.sheduler_d = optim.lr_scheduler.StepLR(self.optimizer_d, step_size=LR_STEP_SIZE, gamma=GAMMA)
+        # self.sheduler_g = optim.lr_scheduler.StepLR(self.optimizer_g, step_size=LR_STEP_SIZE, gamma=GAMMA)
+        # self.sheduler_d = optim.lr_scheduler.StepLR(self.optimizer_d, step_size=LR_STEP_SIZE, gamma=GAMMA)
+        self.sheduler_g = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_g, mode='min', factor=0.1, patience=2, verbose=True, threshold=0.01, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
+        self.sheduler_d = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_d, mode='min', factor=0.1, patience=2, verbose=True, threshold=0.01, threshold_mode='rel', cooldown=0, min_lr=0,eps=1e-08)
 
-    print('Training started')
     def train(self):
+        print('Training started')
         init_epoch = 0
         best_f1 = 0
         best_jaccard_score = 0
@@ -53,6 +57,7 @@ class CDGAN:
             self.netd.train()
             epoch_iter = 0
             for i, data in enumerate(self.train_dataloader ):
+                # print('epoch:',epoch,'iteration:',i)
                 INPUT_SIZE = [ISIZE,ISIZE] 
                 x1, x2, gt = data
                 x1 = x1.to(DEVICE, dtype=torch.float)
@@ -153,7 +158,6 @@ class CDGAN:
                     del x2
                     del label
                     torch.cuda.empty_cache()
-
                 precision = TP/(TP+FP+1e-8)
                 oa = (TP+TN)/(TP+FN+TN+FP+1e-8)
                 recall = TP/(TP+FN+1e-8)
@@ -162,8 +166,12 @@ class CDGAN:
                 # if not os.path.exists(BEST_WEIGHT_SAVE_DIR):
                 #     os.makedirs(ct.BEST_WEIGHT_SAVE_DIR)
                 # print('jaccard:',jaccard_score)
-                self.sheduler_d.step()
-                self.sheduler_g.step() 
+
+                # self.sheduler_d.step()
+                # self.sheduler_g.step() 
+                self.sheduler_d.step(1-total_jaccard_score)
+                self.sheduler_g.step(1-total_jaccard_score)
+
                 if total_jaccard_score > best_jaccard_score: 
                     best_f1 = f1
                     best_jaccard_score = total_jaccard_score
@@ -177,7 +185,44 @@ class CDGAN:
                     f.write('current epoch:{},current f1:{},best f1:{}'.format(epoch,f1,best_f1))
                     f.write("jaccard score:{}".format(total_jaccard_score))
                     f.write('\n')  
-        
+    # def test(self):
+    #     print('Testing.................')
+    #     self.load_model()
+    #     self.netg.eval()
+    #     with torch.no_grad(): 
+    #       TP = 0
+    #       FN = 0
+    #       FP = 0
+    #       TN = 0
+    #       total_jaccard_score=[]
+    #       for k, data in enumerate(self.test_dataloader):
+    #           x1, x2, label = data
+    #           x1 = x1.to(DEVICE, dtype=torch.float)
+    #           x2 = x2.to(DEVICE, dtype=torch.float)
+    #           label = label.to(DEVICE, dtype=torch.float)
+    #           label = label[:,0,:,:].unsqueeze(1)
+    #           x = torch.cat((x1,x2),1)
+    #           time_i = time.time()
+    #           v_fake = self.netg(x)
+    #           tp, fp, tn, fn = f1_score(v_fake, label)   
+    #           TP += tp
+    #           FN += fn
+    #           TN += tn
+    #           FP += fp
+    #           jaccard_score_= compute_jaccard_index(v_fake,label)
+    #           total_jaccard_score+=jaccard_score_
+    #           save_current_images(100, label.data, v_fake.data, IM_SAVE_DIR, 'test_output_images',k)
+    #           del x1
+    #           del x2
+    #           del label
+    #           torch.cuda.empty_cache()
+    #       precision = TP/(TP+FP+1e-8)
+    #       recall = TP/(TP+FN+1e-8)
+    #       f1 = 2*precision*recall/(precision+recall+1e-8)
+    #       total_jaccard_score=np.mean(total_jaccard_score)
+    #       print('test F1: {}'.format(f1))
+    #       print('test jaccard score:{}'.format(total_jaccard_score))   
+   
     def save_model(self):
         torch.save(self.netg.state_dict(), os.path.join(OUTPUT_PATH, 'netg.pth'))
         torch.save(self.netd.state_dict(), os.path.join(OUTPUT_PATH, 'netd.pth'))
@@ -191,4 +236,5 @@ class CDGAN:
 if __name__ == "__main__":
     cdgan = CDGAN()
     cdgan.train()
+    # cdgan.test()
     

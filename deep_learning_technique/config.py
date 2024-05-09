@@ -12,8 +12,8 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # training configuration
 EPOCH = 50
 ISIZE = 256         # input image size
-RESUME_TRAINING = False
-BATCH_SIZE = 8 
+RESUME_TRAINING = True
+BATCH_SIZE = 10 
 DISPLAY = True      # if display training phase in Visdom
 DISPOLAY_STEP = 20    
 RESUME = False       # if resume from the last epoch
@@ -23,15 +23,15 @@ THRESHOLD = 0.5
 SAVE_TEST_IAMGES = True # if save change maps during test
 
 # optimizer configuration
-LR = 0.0001     # learning rate
+LR = 0.00002    # learning rate
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.0005
-LR_STEP_SIZE = 20
-GAMMA = 0.1
+LR_STEP_SIZE = 50
+GAMMA = 0.5
 # G_WEIGHT = 200    # loss weight
 G_WEIGHT = 200    # loss weight
 D_WEIGHT = 1        # loss weight
-L1_WEIGHT = 6     # traget 1 weight
+L1_WEIGHT = 1     # traget 1 weight
 L0_WEIGHT = 1     # target 0 weight
 
 # networks configuration
