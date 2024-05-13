@@ -242,7 +242,7 @@ def get_errors(err_d, err_g):
 
         return errors
     
-def save_current_images(epoch, reals, fakes,save_dir,name,k):
+def save_current_images(reals, fakes,save_dir,name,k,label_names):
         """ Save images for epoch i.
 
         Args:
@@ -259,22 +259,12 @@ def save_current_images(epoch, reals, fakes,save_dir,name,k):
         reals = reals.detach().cpu().numpy()
         # make fakes binary
         for i in range(fakes.shape[0]):
-            # fakes[i] = fakes[i].detach().cpu().numpy()
             fakes[i][fakes[i]>0.5] = 255
             fakes[i][fakes[i]<=0.5] = 0
             reals[i][reals[i]>0.5] = 255
             reals[i][reals[i]<=0.5] = 0
-        # score = np.array(fakes.detach().squeeze(0).cpu())
-        # threshold =0.5
-        # # print("summation============",np.sum([score>threshold]))
-        # score[score>threshold] = 255
-        # score[score<=threshold] = 0.0 
-        # print(score.shape)
-            cv2.imwrite(save_path+"/pred_"+str(i)+"_"+str(k)+".png",fakes[i][0])
-            cv2.imwrite(save_path+"/gt_"+str(i)+"_"+str(k)+".png",reals[i][0])
-        # vutils.save_image(reals, '%s/reals.png' % save_path, normalize=True)
-        # vutils.save_image(fakes, '%s/fakes_%03d.png' % (save_path, epoch+1), normalize=True)
-        # vutils.save_image(fakes, '%s/fakes_%03d.png' % (save_path, epoch+1), normalize=True)
+            cv2.imwrite(save_path+"/pre_"+label_names[i+k*8],fakes[i][0])
+            cv2.imwrite(save_path+"/gth"+label_names[i+k*8],reals[i][0])
 
 def save_weights(epoch,net,optimizer,save_path, model_name):
     checkpoint = {

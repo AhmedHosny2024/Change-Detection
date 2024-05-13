@@ -9,33 +9,23 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 from pylab import *
 from deep_learning_technique.config import *
-# train_transform = [            
-#     transforms.RandomRotation((360,360), expand=False, center=None),
-#     transforms.RandomVerticalFlip(p=1),
-#     transforms.RandomHorizontalFlip(p=1),
-#     transforms.RandomRotation((180,180), expand=False, center=None),
-#     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
-#     transforms.RandomAffine(degrees=20, translate=(0.1, 0.1), scale=(0.8, 1.2)),
-#     transforms.Resize((ISIZE,ISIZE)),
-#     transforms.ToTensor(),
-#     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-# ]
+
 train_transform = [            
     transforms.RandomRotation((360,360), expand=False, center=None),
     transforms.RandomVerticalFlip(p=1),
     transforms.RandomHorizontalFlip(p=1),
     transforms.RandomRotation((180,180), expand=False, center=None),
-    # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
-    # transforms.RandomAffine(degrees=20, translate=(0.1, 0.1), scale=(0.8, 1.2)),
-    transforms.Resize((ISIZE,ISIZE)),
+    transforms.RandomRotation((90, 90), expand=False, center=None),
+    transforms.RandomVerticalFlip(p=1),
+    transforms.RandomHorizontalFlip(p=1),
+    # transforms.Resize((ISIZE,ISIZE)),
+    transforms.RandomResizedCrop((ISIZE, ISIZE), scale=(0.8, 1.0)),  # Adding zooming
     transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-7]
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),]
 test_transform = [            
     transforms.Resize((ISIZE,ISIZE)),
     transforms.ToTensor(),
     transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5 )),
-    # transforms.Normalize((7.78778377, 0.7776678, 70.51143379), (0.08119602 ,0.08063477, 0.08069688 ))78
     ]
 class Custom_dataset(Dataset):
     def __init__(self, folder_Path,transform_type="train"):
@@ -48,18 +38,23 @@ class Custom_dataset(Dataset):
         self.labels_files = sorted(os.listdir(self.labels_folder))
         self.transform_type = transform_type
         self.file_size = len(self.files_A)
+        if '.ipynb_checkpoints' in self.files_A:
+            self.files_A.remove('.ipynb_checkpoints')
+        if '.ipynb_checkpoints' in self.files_B:
+            self.files_B.remove('.ipynb_checkpoints')
+        if '.ipynb_checkpoints' in self.labels_files:
+            self.labels_files.remove('.ipynb_checkpoints')
 
     def __getitem__(self, idx):
-
         x1 = Image.open(os.path.join(self.folder_A, self.files_A[idx]))
         x2 = Image.open(os.path.join(self.folder_B, self.files_B[idx]))
         gt = Image.open(os.path.join(self.labels_folder, self.labels_files[idx]))
         if(self.transform_type=="train"):
-            k = np.random.randint(4)        
+            k = np.random.randint(7)        
             x1 = train_transform[k](x1);x2 = train_transform[k](x2);gt = train_transform[k](gt);
-            x1 = train_transform[4](x1);x2 = train_transform[4](x2);gt = train_transform[4](gt);
-            x1 = train_transform[5](x1);x2 = train_transform[5](x2);gt = train_transform[5](gt);
-            x1 = train_transform[6](x1);x2 = train_transform[6](x2);
+            x1 = train_transform[7](x1);x2 = train_transform[7](x2);gt = train_transform[7](gt);
+            x1 = train_transform[8](x1);x2 = train_transform[8](x2);gt = train_transform[8](gt);
+            x1 = train_transform[9](x1);x2 = train_transform[9](x2);
         else:
             x1 = test_transform[0](x1);x2 = test_transform[0](x2);gt = test_transform[0](gt);
             x1 = test_transform[1](x1);x2 = test_transform[1](x2);gt = test_transform[1](gt);
@@ -69,16 +64,22 @@ class Custom_dataset(Dataset):
     def __len__(self):
         return self.file_size
     
+    def get_files_name(self):
+        return self.labels_files
+    
 # test the custom dataset
 if __name__ == "__main__":
     # create a dataset object
     dataset = Custom_dataset(TRAIN_FOLDER_PATH)
     # create a dataloader object
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
     # get the first batch
+    i=0
     for x1, x2, gt in dataloader:
         print(x1.shape, x2.shape, gt.shape)
-        break
+        if i == 50:
+            break
+        i+=1
     # display the first image
     cv2.imshow('x1', x1[0].permute(1, 2, 0).numpy())
     cv2.waitKey(0)

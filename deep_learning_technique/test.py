@@ -17,6 +17,7 @@ class CDGAN:
         self.test_dataset=custom_dataset(TEST_FOLDER_PATH,transform_type="test")
         self.test_dataloader = DataLoader(self.test_dataset, batch_size=BATCH_SIZE, shuffle=False)
         #Models
+        self.file_name=self.test_dataset.get_files_name()
         self.netg = Generator(ISIZE,NC*2, NZ, NDF, EXTRALAYERS).to(DEVICE)
         self.netg.apply(weights_init)
         
@@ -46,7 +47,7 @@ class CDGAN:
               FP += fp
               jaccard_score_= compute_jaccard_index(v_fake,label)
               total_jaccard_score+=jaccard_score_
-              save_current_images(100, label.data, v_fake.data, IM_SAVE_DIR, 'test_output_images',k)
+              save_current_images(label.data, v_fake.data, IM_SAVE_DIR, 'test_output_images',k, self.file_name)
               del x1
               del x2
               del label
