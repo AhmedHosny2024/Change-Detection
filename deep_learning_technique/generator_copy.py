@@ -1,7 +1,7 @@
 import torch 
 import torch.nn as nn
 from deep_learning_technique.channel_attention_layer import ChannelAttention 
-
+from deep_learning_technique.config import NC, NZ, NDF, EXTRALAYERS
 class Generator(nn.Module):
     def __init__(self, isize, nc, nz, ndf, n_extra_layers=0): # nc=input_channel, nz=output_channel, ndf=number of features
         super(Generator, self).__init__()
@@ -40,7 +40,7 @@ class Generator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             )
         self.e3_add = nn.Sequential(
-            nn.Conv2d(ndf*4, ndf*8, 3, 1, 1, bias=False),
+            nn.Conv2d(ndf*4, ndf*8, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf*8),
             nn.LeakyReLU(0.2, inplace=True),
             )
@@ -58,7 +58,7 @@ class Generator(nn.Module):
             nn.ReLU(True),
             )
         self.d4 = nn.Sequential(
-            nn.ConvTranspose2d(ndf*8*2, ndf*4, 3, 1, 1, bias=False),
+            nn.ConvTranspose2d(ndf*8*2, ndf*4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf*4),
             nn.ReLU(True),
             )
@@ -137,8 +137,10 @@ class Generator(nn.Module):
 from torchsummary import summary
 if __name__ == "__main__":
   device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-  model = Generator(256, 3*2,100, 64, 3)
+  model = Generator(256, 2*NC, NZ, NDF, EXTRALAYERS)
   y = model(torch.randn(2,6,256,256))    
   print(y.shape)
   model = model.to(device)
   summary(model, (6,256,256))
+
+  # python -m deep_learning_technique.generator_copy
