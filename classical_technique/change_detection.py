@@ -4,6 +4,7 @@ import cv2
 from classical_technique.custom_data_loader import CustomDataset
 from sklearn.metrics import jaccard_score
 from classical_technique.classical_technique import *
+# from classical_technique.PCAKMeans import *
 
 class ChangeDetection:
     def __init__(self, folder_A, folder_B,output_folder,labels_folder,model=None):
@@ -19,8 +20,10 @@ class ChangeDetection:
         print("Training the model...")
         # Perform training callings
         results=[]
-        results = image_differencing_gray(self.images_A, self.images_B)
+        results = post_classification_comparison(self.images_A, self.images_B)
         # results = post_classification_comparison(self.images_A, self.images_B)
+        # results=pca_kmeans_change(self.images_A, self.images_B)    
+        # results=diff_image_simple(self.images_A, self.images_B)
         for i, out_image in enumerate(results):
         # Save the difference image
             filename = f"{i:04d}.png"
@@ -41,18 +44,10 @@ class ChangeDetection:
             # Read result and label images
             result_img = cv2.imread(os.path.join(self.output_folder, result_file))
             label_img = cv2.imread(os.path.join(self.labels_folder, label_file))
-            
-            # Compute Jaccard Index
-            # print("rest",result_img.shape)
-            # print("label",label_img.shape)
             img_true=np.array(label_img).ravel()
             img_pred=np.array(result_img).ravel()
-            # print("img_true",img_true.max(),img_true.min())
-            # print("img_pred",img_pred.max(),img_pred.min())
-
             jaccard_index = jaccard_score(img_true, img_pred,pos_label=255,zero_division=1)
             jaccard_indices.append(jaccard_index)
-        # print("Jaccard Indices:", jaccard_indices)
         mean_jaccard_index = np.mean(jaccard_indices)
         print("Mean Jaccard Index:", mean_jaccard_index)
 # main

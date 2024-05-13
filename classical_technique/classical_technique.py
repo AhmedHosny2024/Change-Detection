@@ -18,27 +18,16 @@ THRESHOLD = 190
 def preprocess_image(image):
     # Convert image to uint8 data type and ensure it's in the range [0, 255]
     # image = cv2.convertScaleAbs(image, alpha=1.0, beta=0)
-    # image = (image * 255).astype(np.uint8)
+    image = (image * 255).astype(np.uint8)
     # # Apply histogram equalization to each color channel separately
-    # equalized_channels = [exposure.equalize_hist(image[:, :, i]) for i in range(image.shape[2])]
-    # image = np.stack(equalized_channels, axis=-1)
+    equalized_channels = [exposure.equalize_hist(image[:, :, i]) for i in range(image.shape[2])]
+    image = np.stack(equalized_channels, axis=-1)
     # # Apply Gaussian blur
     # image = cv2.GaussianBlur(image, (15, 15), 0)
     # corrected_image = np.copy(image)
-    # for i in range(1, image.shape[0]-1):
-    #     # Find the locations of white pixels (255) in the current row
-    #     # dropout_locations = np.where(image[i] == 255)[0]        
-    #     # Iterate over each dropout location in the current row
-    #     if np.sum(image[i] == 255) > 255 or np.sum(image[i] == 0) > 255:
-    #         # Get the pixel values from the preceding and succeeding lines
-    #         prev_value = image[i-1]
-    #         next_value = image[i+1]
-    #         # print("in loop")
-    #         # Calculate the average of the two values
-    #         average_value = (prev_value + next_value) // 2
-    #         # Assign the average value to the dropout pixel
-    #         corrected_image[i] = average_value
-    image=cv2.medianBlur(image, 5)
+    # image=cv2.medianBlur(image, 3)
+    image = (image * 255).astype(np.uint8)
+
     return image
 THRESHOLD_SMALL=240
 THRESHOLD_LARGE=300
@@ -133,9 +122,9 @@ def image_differencing(images_A, images_B):
 # K=5: 0.06393759768844175
 # K=8: 0.06593848687200131
 # k=20 0.0675898079952895
-n_clusters = 5
+n_clusters = 2
 spectral_clustering = SpectralClustering(n_clusters=n_clusters, affinity='nearest_neighbors', random_state=42)
-kmeans = KMeans(n_clusters=n_clusters, n_init=10, random_state=42)
+kmeans = KMeans(n_clusters=n_clusters, n_init=10, random_state=42,max_iter=100)
 
 def post_classification_comparison(images_A, images_B):
     results_img=[]
@@ -143,8 +132,8 @@ def post_classification_comparison(images_A, images_B):
     for img_A, img_B in zip(images_A, images_B):
         # Flatten images for classification
         print("Processing image", image_number)
-        img_A = preprocess_image(img_A)
-        img_B = preprocess_image(img_B)
+        # img_A = preprocess_image(img_A)
+        # img_B = preprocess_image(img_B)
         # Classify images
         classified_image1 = classify_image(img_A)
         classified_image2 = classify_image(img_B)
@@ -172,3 +161,24 @@ def stronge_classifier(image):
     classified_image = labels.reshape(image.shape[:2])
     return classified_image
 
+def diff_image(images_A, images_B):
+    results_img=[]
+    for img_A, img_B in zip(images_A, images_B):
+        img_diff = np.array(img_A, dtype=np.float32) - np.array(img_B, dtype=np.float32)
+        img_diff = np.sqrt(np.sum(np.square(img_diff), axis=-1))
+        img_diff= img_diff>60
+        img_diff=img_diff.astype(np.uint8)*255
+        results_img.append(img_diff)
+    return results_img
+# Mean Jaccard Index: 0.09206747368369564
+# Mean Jaccard Index: 0.1028530606521822 78
+def diff_image_simple(images_A, images_B):
+    results_img=[]
+    for img_A, img_B in zip(images_A, images_B):
+        img_A=preprocess_image(img_A)
+        img_B=preprocess_image(img_B)
+        img_diff = np.array(img_A, dtype=np.float32) - np.array(img_B, dtype=np.float32)
+        img_diff= img_diff>75
+        img_diff=img_diff.astype(np.uint8)*255
+        results_img.append(img_diff)
+    return results_img

@@ -29,6 +29,19 @@ def preprocess_remote_sensing_data(image,calibrated=True,
 
     return image
 
+def preprocess_image(image):
+    # Convert image to uint8 data type and ensure it's in the range [0, 255]
+    # image = cv2.convertScaleAbs(image, alpha=1.0, beta=0)
+    image = (image * 255).astype(np.uint8)
+    # # Apply histogram equalization to each color channel separately
+    equalized_channels = [exposure.equalize_hist(image[:, :, i]) for i in range(image.shape[2])]
+    image = np.stack(equalized_channels, axis=-1)
+    # # Apply Gaussian blur
+    # image = cv2.GaussianBlur(image, (15, 15), 0)
+    # corrected_image = np.copy(image)
+    # image=cv2.medianBlur(image, 3)
+    return image
+
 def locate_and_correct_bad_lines(image):
     # Iterate over each row in the image
     corrected_image = np.copy(image)
@@ -63,20 +76,21 @@ if __name__ == "__main__":
         if filename.endswith('.jpg') or filename.endswith('.png'):
             # Read image
             image_path = os.path.join(input_folder, filename)
-            image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            image = cv2.imread(image_path)
             # Preprocess image
-            preprocessed_image = preprocess_remote_sensing_data(image)
+            preprocessed_image = preprocess_image(image)
             # Save preprocessed image
             # show the image
             # preprocessed_image=preprocessed_image*255
             preprocessed_image = (preprocessed_image * 255).astype(np.uint8)
 
-            preprocessed_image_rgb = cv2.cvtColor(preprocessed_image, cv2.COLOR_GRAY2RGB)
+            # preprocessed_image_rgb = cv2.cvtColor(preprocessed_image, cv2.COLOR_GRAY2RGB)
 
             output_path = os.path.join(output_folder, filename)
             cv2.imwrite(output_path, preprocessed_image)
 
             print(f"Processed and saved: {output_path}")
+            break
 
     print("All images processed and saved successfully.")
 
