@@ -10,7 +10,8 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from deep_learning_technique.config import *
-from sklearn.metrics import jaccard_score
+from sklearn.metrics import jaccard_score 
+from sklearn.metrics import precision_recall_fscore_support
 import cv2
 def weights_init(mod):
     """
@@ -138,6 +139,7 @@ def compute_jaccard_index(prediction, ground_truth):
     jaccard_indices = []
     ground_truth=ground_truth.cpu().numpy()
     prediction=prediction.cpu().numpy()
+    f1=[]
     for result_img,label_img in zip(prediction,ground_truth):
       # Compute Jaccard Index
       img_true=np.array(label_img).ravel()
@@ -146,14 +148,17 @@ def compute_jaccard_index(prediction, ground_truth):
       img_true=np.where(img_true>THRESHOLD,255,0)
       jaccard_index = jaccard_score(img_true, img_pred,pos_label=255,zero_division=1)
       jaccard_indices.append(jaccard_index)
+      precision, recall, f1_score, _ = precision_recall_fscore_support(img_true, img_pred, average='binary',pos_label=255,zero_division=1)
+      f1.append(f1_score)
+      
     # mean_jaccard_index = np.mean(jaccard_indices)
     # print("Mean Jaccard Index:", mean_jaccard_index)
-    return jaccard_indices
+    return jaccard_indices , f1
 
 def L1_loss(input, target):
     diff = torch.abs(input - target)
     weighted_diff = L1_WEIGHT * diff * target + L0_WEIGHT * diff * (1 - target)
-    loss = torch.sum(weighted_diff)
+    loss = torch.mean(weighted_diff)
     return loss
 
 

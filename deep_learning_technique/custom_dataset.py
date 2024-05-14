@@ -18,8 +18,8 @@ train_transform = [
     transforms.RandomRotation((90, 90), expand=False, center=None),
     transforms.RandomVerticalFlip(p=1),
     transforms.RandomHorizontalFlip(p=1),
-    # transforms.Resize((ISIZE,ISIZE)),
-    transforms.RandomResizedCrop((ISIZE, ISIZE), scale=(0.8, 1.0)),  # Adding zooming
+    transforms.Resize((ISIZE,ISIZE)),
+    # transforms.RandomResizedCrop((ISIZE, ISIZE), scale=(0.8, 1.0)),  # Adding zooming
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),]
 test_transform = [            
@@ -28,7 +28,7 @@ test_transform = [
     transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5 )),
     ]
 class Custom_dataset(Dataset):
-    def __init__(self, folder_Path,transform_type="train"):
+    def __init__ (self, folder_Path,transform_type="train"):
         super(Custom_dataset, self).__init__()
         self.folder_A = folder_Path+"/A"
         self.folder_B = folder_Path+"/B"

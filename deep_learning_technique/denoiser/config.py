@@ -17,9 +17,9 @@ LADV=20
 
 OUTPUT_DIR="deep_learning_technique/denoiser/denoiser_models"
 CONTINUE_TRAIN=False
-TRAIN_DATA='trainval/train_onserver'
-TEST_DATA= 'trainval/test_onserver'
-EVAL_DATA= 'trainval/validation_onsever'
+TRAIN_DATA='trainval/train'
+TEST_DATA= 'trainval/test'
+EVAL_DATA= 'trainval/validation'
 
 # TEST_DATA= "datasets/train.csv"
 NAME="tomogan"
