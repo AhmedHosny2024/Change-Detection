@@ -8,6 +8,7 @@ from skimage.metrics import structural_similarity as compare_ssim
 from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
 from skimage import exposure
+from classical_technique.cva import CVA,otsu
 
 # THRESHOLD=300 0.079
 # THRESHOLD = 500  0.06669160304252116
@@ -171,7 +172,7 @@ def diff_image(images_A, images_B):
         results_img.append(img_diff)
     return results_img
 # Mean Jaccard Index: 0.09206747368369564
-# Mean Jaccard Index: 0.1028530606521822 78
+# Mean Jaccard Index: 0.1028530606521822 78 without preprocess
 def diff_image_simple(images_A, images_B):
     results_img=[]
     for img_A, img_B in zip(images_A, images_B):
@@ -181,4 +182,20 @@ def diff_image_simple(images_A, images_B):
         img_diff= img_diff>75
         img_diff=img_diff.astype(np.uint8)*255
         results_img.append(img_diff)
+    return results_img
+
+# Mean Jaccard Index: 0.060722311740071026
+def cva_change(images_A, images_B):
+    results_img=[]
+    for img_A, img_B in zip(images_A, images_B):
+        img_X = np.transpose(img_A, (2, 0, 1))
+        img_Y = np.transpose(img_B, (2, 0, 1))
+        channel, img_height, img_width = img_X.shape
+        L2_norm = CVA(img_X, img_Y)
+
+        bcm = np.zeros((img_height, img_width))
+        thre = otsu(L2_norm.reshape(1, -1))
+        bcm[L2_norm > thre] = 255
+        bcm = np.reshape(bcm, (img_height, img_width))
+        results_img.append(bcm)
     return results_img

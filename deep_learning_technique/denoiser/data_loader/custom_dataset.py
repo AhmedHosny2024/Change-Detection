@@ -8,7 +8,10 @@ import random
 from torch.utils.data import Dataset, DataLoader
 import torch
 from pylab import *
+from deep_learning_technique.denoiser.config import *
 from deep_learning_technique.config import *
+import matplotlib.pylab as plb
+
 
 train_transform = [            
     transforms.RandomRotation((360,360), expand=False, center=None),
@@ -18,8 +21,8 @@ train_transform = [
     transforms.RandomRotation((90, 90), expand=False, center=None),
     transforms.RandomVerticalFlip(p=1),
     transforms.RandomHorizontalFlip(p=1),
-    # transforms.Resize((ISIZE,ISIZE)),
-    transforms.RandomResizedCrop((ISIZE, ISIZE), scale=(0.8, 1.0)),  # Adding zooming
+    transforms.Resize((ISIZE,ISIZE)),
+    # transforms.RandomResizedCrop((ISIZE, ISIZE), scale=(0.8, 1.0)),  # Adding zooming
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),]
 test_transform = [            
@@ -45,20 +48,27 @@ class Custom_dataset(Dataset):
         if '.ipynb_checkpoints' in self.labels_files:
             self.labels_files.remove('.ipynb_checkpoints')
 
-    def __getitem__(self, idx):        
-        x1 = Image.open(os.path.join(self.folder_A, self.files_A[idx]))
-        x2 = Image.open(os.path.join(self.folder_B, self.files_B[idx]))
-        gt = Image.open(os.path.join(self.labels_folder, self.labels_files[idx]))
-        if(self.transform_type=="train"):
-            k = np.random.randint(7)        
-            x1 = train_transform[k](x1);x2 = train_transform[k](x2);gt = train_transform[k](gt);
-            x1 = train_transform[7](x1);x2 = train_transform[7](x2);gt = train_transform[7](gt);
-            x1 = train_transform[8](x1);x2 = train_transform[8](x2);gt = train_transform[8](gt);
-            x1 = train_transform[9](x1);x2 = train_transform[9](x2);
-        else:
-            x1 = test_transform[0](x1);x2 = test_transform[0](x2);gt = test_transform[0](gt);
-            x1 = test_transform[1](x1);x2 = test_transform[1](x2);gt = test_transform[1](gt);
-            x1 = test_transform[2](x1);x2 = test_transform[2](x2);
+    def __getitem__(self, idx):          
+        x1 = cv2.imread(os.path.join(self.folder_A, self.files_A[idx]),cv2.IMREAD_GRAYSCALE)
+        x2 = cv2.imread(os.path.join(self.folder_B, self.files_B[idx]),cv2.IMREAD_GRAYSCALE)
+        gt = cv2.imread(os.path.join(self.labels_folder, self.labels_files[idx]),cv2.IMREAD_GRAYSCALE)
+        # image=np.array(image).astype("float32")
+        # image = cv2.resize(image, (IMAGE_SIZE, IMAGE_SIZE))
+        x1=np.array(x1).astype("float32")
+        x2=np.array(x2).astype("float32")
+        gt=np.array(gt).astype("float32")
+        x1 = cv2.resize(x1, (ISIZE, ISIZE))
+        x2 = cv2.resize(x2, (ISIZE, ISIZE))
+        gt = cv2.resize(gt, (ISIZE, ISIZE))        
+        # return image, label
+        x1 = np.expand_dims(x1, axis=0)
+        x2 = np.expand_dims(x2, axis=0)
+        gt = np.expand_dims(gt, axis=0)
+
+        x1 /= 255.0
+        x2 /= 255.0
+        gt /= 255.0
+
         return x1, x2, gt
 
     def __len__(self):
@@ -69,24 +79,20 @@ class Custom_dataset(Dataset):
     
 # test the custom dataset
 if __name__ == "__main__":
-    # create a dataset object
-    dataset = Custom_dataset(TRAIN_FOLDER_PATH)
+     # create a dataset object
+    dataset = Custom_dataset(folder_Path=TRAIN_DATA,transform_type="train")
     # create a dataloader object
     dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
     # get the first batch
-    i=0
-    for x1, x2, gt in dataloader:
-        print(x1.shape, x2.shape, gt.shape)
-        if i == 50:
-            break
-        i+=1
+    for x1,x2,gt in dataloader:
+        print(x1.shape)
+        print(x2.shape)
+        print(gt.shape)
+        break
     # display the first image
-    cv2.imshow('x1', x1[0].permute(1, 2, 0).numpy())
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    cv2.imshow('x2', x2[0].permute(1, 2, 0).numpy())
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    cv2.imshow('gt', gt[0].permute(1, 2, 0).numpy())
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    plb.imshow(x1[0][0])
+    plb.show()
+    plb.imshow(x2[0][0])
+    plb.show()
+    plb.imshow(gt[0][0])
+    plb.show()

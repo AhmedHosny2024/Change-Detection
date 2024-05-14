@@ -171,9 +171,9 @@ def make_validation_folder_balanced():
             image_validation_check=os.path.join("trainval/validation_onsever/A",files_A[idx])
             # if  path fiounf in A B Label then copy to new folder
             if not os.path.exists(image_test_check) and not os.path.exists(image_validation_check):
-                shutil.copy(image_path_label, os.path.join("trainval/train_onserver/A",files_A[idx]))
-                shutil.copy(image_path_A, os.path.join("trainval/train_onserver/B",files_A[idx]))
-                shutil.copy(image_path_B, os.path.join("trainval/train_onserver/label",files_A[idx]))
+                shutil.copy(image_path_A, os.path.join("trainval/train_onserver/A",files_A[idx]))
+                shutil.copy(image_path_B, os.path.join("trainval/train_onserver/B",files_A[idx]))
+                shutil.copy(image_path_label, os.path.join("trainval/train_onserver/label",files_A[idx]))
                 c+=1
     print(c)
     

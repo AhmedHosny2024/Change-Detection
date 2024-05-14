@@ -47,7 +47,7 @@ class CDGAN:
         print('Training started')
         # 1
         # self.netg.eval() 
-        self.netd.eval()
+        # self.netd.eval()
         init_epoch = 0
         best_f1 = 0
         best_jaccard_score = 0
@@ -61,7 +61,7 @@ class CDGAN:
             loss_d = []
             # 2
             self.netg.train()
-            # self.netd.train()
+            self.netd.train()
 
             epoch_iter = 0
             for i, data in enumerate(self.train_dataloader ):
@@ -99,9 +99,9 @@ class CDGAN:
                 err_g_total.backward(retain_graph = True)
                 self.optimizer_g.step()
 
-                # self.optimizer_d.zero_grad()
-                # err_d_total.backward()
-                # self.optimizer_d.step()
+                self.optimizer_d.zero_grad()
+                err_d_total.backward()
+                self.optimizer_d.step()
                 
                 errors =get_errors(err_d_total, err_g_total)            
                 loss_g.append(err_g_total.item())
@@ -160,6 +160,10 @@ class CDGAN:
                     del x2
                     del label
                     torch.cuda.empty_cache()
+                print('TP:',TP)
+                print('FP:',FP)
+                print('TN:',TN)
+                print('FN:',FN)
                 precision = TP/(TP+FP+1e-8)
                 oa = (TP+TN)/(TP+FN+TN+FP+1e-8)
                 recall = TP/(TP+FN+1e-8)
@@ -167,7 +171,7 @@ class CDGAN:
                 total_jaccard_score=np.mean(total_jaccard_score)
 
                 # 3
-                # self.sheduler_d.step()
+                self.sheduler_d.step()
                 self.sheduler_g.step() 
 #                 self.sheduler_d.step(1-total_jaccard_score)
 #                 self.sheduler_g.step(1-total_jaccard_score)
@@ -227,8 +231,8 @@ class CDGAN:
     def save_model(self):
         # 5
         torch.save(self.netg.state_dict(), os.path.join(OUTPUT_PATH, 'netg.pth'))
-        # torch.save(self.netd.state_dict(), os.path.join(OUTPUT_PATH, 'netd.pth'))
-        print('Discriminator saved successfully')
+        torch.save(self.netd.state_dict(), os.path.join(OUTPUT_PATH, 'netd.pth'))
+        print('generator saved successfully')
         return True
     def load_model(self):
         self.netg.load_state_dict(torch.load(os.path.join(OUTPUT_PATH, 'netg.pth')))
