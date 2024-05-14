@@ -7,7 +7,7 @@ from deep_learning_technique.config import *
 from torch.utils.data import Dataset, DataLoader
 from deep_learning_technique.utilties import *
 import torch.optim as optim
-from deep_learning_technique.generator import Generator
+from deep_learning_technique.generator_copy import Generator
 from deep_learning_technique.discriminator import Discriminator
 
 class CDGAN:
@@ -31,6 +31,7 @@ class CDGAN:
           FP = 0
           TN = 0
           total_jaccard_score=[]
+          f1_score_list=[]
           for k, data in enumerate(self.test_dataloader):
               x1, x2, label = data
               x1 = x1.to(DEVICE, dtype=torch.float)
@@ -45,8 +46,9 @@ class CDGAN:
               FN += fn
               TN += tn
               FP += fp
-              jaccard_score_= compute_jaccard_index(v_fake,label)
+              jaccard_score_,f1_sco= compute_jaccard_index(v_fake,label)
               total_jaccard_score+=jaccard_score_
+              f1_score_list+=f1_sco
               save_current_images(label.data, v_fake.data, IM_SAVE_DIR, 'test_output_images',k, self.file_name)
               del x1
               del x2
@@ -60,6 +62,7 @@ class CDGAN:
           recall = TP/(TP+FN+1e-8)
           f1 = 2*precision*recall/(precision+recall+1e-8)
           total_jaccard_score=np.mean(total_jaccard_score)
+          f1=np.mean(f1_score_list)
           print('test F1: {}'.format(f1))
           print('test jaccard score:{}'.format(total_jaccard_score))   
 

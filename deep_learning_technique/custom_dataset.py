@@ -28,7 +28,7 @@ test_transform = [
     transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5 )),
     ]
 class Custom_dataset(Dataset):
-    def __init__(self, folder_Path,transform_type="train"):
+    def __init__ (self, folder_Path,transform_type="train"):
         super(Custom_dataset, self).__init__()
         self.folder_A = folder_Path+"/A"
         self.folder_B = folder_Path+"/B"

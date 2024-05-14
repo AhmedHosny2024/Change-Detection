@@ -50,7 +50,7 @@ class CDGAN:
         # self.netd.eval()
         init_epoch = 0
         best_f1 = 0
-        best_jaccard_score = 0
+        best_jaccard_score = 0.77
         total_steps = 0
 
         # Discriminator_loss =1000
@@ -139,6 +139,7 @@ class CDGAN:
                 FP = 0
                 TN = 0
                 total_jaccard_score=[]
+                f1_score_list=[]
                 for k, data in enumerate(self.valid_dataloader):
                     x1, x2, label = data
                     x1 = x1.to(DEVICE, dtype=torch.float)
@@ -153,7 +154,8 @@ class CDGAN:
                     FN += fn
                     TN += tn
                     FP += fp
-                    jaccard_score_= compute_jaccard_index(v_fake,label)
+                    jaccard_score_, f1_sco= compute_jaccard_index(v_fake,label)
+                    f1_score_list+=f1_sco
                     total_jaccard_score+=jaccard_score_
 
                     del x1
@@ -169,6 +171,7 @@ class CDGAN:
                 recall = TP/(TP+FN+1e-8)
                 f1 = 2*precision*recall/(precision+recall+1e-8)
                 total_jaccard_score=np.mean(total_jaccard_score)
+                f1=np.mean(f1_score_list)
 
                 # 3
                 self.sheduler_d.step()
@@ -200,6 +203,7 @@ class CDGAN:
           FP = 0
           TN = 0
           total_jaccard_score=[]
+          f1_score_list=[]
           for k, data in enumerate(self.test_dataloader):
               x1, x2, label = data
               x1 = x1.to(DEVICE, dtype=torch.float)
@@ -214,8 +218,9 @@ class CDGAN:
               FN += fn
               TN += tn
               FP += fp
-              jaccard_score_= compute_jaccard_index(v_fake,label)
+              jaccard_score_,f1_score= compute_jaccard_index(v_fake,label)
               total_jaccard_score+=jaccard_score_
+              f1_score_list.append(f1_score)
               save_current_images(100, label.data, v_fake.data, IM_SAVE_DIR, 'test_output_images',k)
               del x1
               del x2
@@ -225,7 +230,8 @@ class CDGAN:
           recall = TP/(TP+FN+1e-8)
           f1 = 2*precision*recall/(precision+recall+1e-8)
           total_jaccard_score=np.mean(total_jaccard_score)
-          print('test F1: {}'.format(f1))
+          f1_score=np.mean(f1_score_list)
+          print('test F1: {}'.format(f1_score))
           print('test jaccard score:{}'.format(total_jaccard_score))   
    
     def save_model(self):
