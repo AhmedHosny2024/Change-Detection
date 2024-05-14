@@ -148,7 +148,6 @@ def main():
     after_img = cv2.imread('E:/College/Fourth Year/second term/RSSI/Project/Change-Detection/trainval/B/0069.png')[:, :, 0:3]
     eig_dim = 10
     block_sz = 4
-
     diff_img = diff_image(before_img, after_img, is_abs=True, is_multi_channel=True)
     change_img = pca_k_means(diff_img, block_size=block_sz,
                              eig_space_dim=eig_dim)

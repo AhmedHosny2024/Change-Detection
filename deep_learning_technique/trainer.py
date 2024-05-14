@@ -7,7 +7,7 @@ from deep_learning_technique.config import *
 from torch.utils.data import Dataset, DataLoader
 from deep_learning_technique.utilties import *
 import torch.optim as optim
-from deep_learning_technique.generator import Generator
+from deep_learning_technique.generator_copy import Generator
 from deep_learning_technique.discriminator import Discriminator
 
 class CDGAN:
@@ -18,8 +18,8 @@ class CDGAN:
         self.train_dataloader = DataLoader(self.train_dataset, batch_size=BATCH_SIZE, shuffle=True)
         self.valid_dataset=custom_dataset(VAL_FOLDER_PATH,transform_type="test")
         self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=BATCH_SIZE, shuffle=False)
-        # self.test_dataset=custom_dataset(TEST_FOLDER_PATH,transform_type="test")
-        # self.test_dataloader = DataLoader(self.test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+        self.test_dataset=custom_dataset(TEST_FOLDER_PATH,transform_type="test")
+        self.test_dataloader = DataLoader(self.test_dataset, batch_size=BATCH_SIZE, shuffle=False)
         #Models
         self.netg = Generator(ISIZE,NC*2, NZ, NDF, EXTRALAYERS).to(DEVICE)
         self.netd = Discriminator(ISIZE, GT_C, 1, NGF, EXTRALAYERS).to(DEVICE)
@@ -47,7 +47,7 @@ class CDGAN:
         print('Training started')
         # 1
         # self.netg.eval() 
-        self.netd.eval()
+        # self.netd.eval()
         init_epoch = 0
         best_f1 = 0
         best_jaccard_score = 0
@@ -61,7 +61,7 @@ class CDGAN:
             loss_d = []
             # 2
             self.netg.train()
-            # self.netd.train()
+            self.netd.train()
 
             epoch_iter = 0
             for i, data in enumerate(self.train_dataloader ):
@@ -99,9 +99,9 @@ class CDGAN:
                 err_g_total.backward(retain_graph = True)
                 self.optimizer_g.step()
 
-                # self.optimizer_d.zero_grad()
-                # err_d_total.backward()
-                # self.optimizer_d.step()
+                self.optimizer_d.zero_grad()
+                err_d_total.backward()
+                self.optimizer_d.step()
                 
                 errors =get_errors(err_d_total, err_g_total)            
                 loss_g.append(err_g_total.item())
@@ -160,6 +160,10 @@ class CDGAN:
                     del x2
                     del label
                     torch.cuda.empty_cache()
+                print('TP:',TP)
+                print('FP:',FP)
+                print('TN:',TN)
+                print('FN:',FN)
                 precision = TP/(TP+FP+1e-8)
                 oa = (TP+TN)/(TP+FN+TN+FP+1e-8)
                 recall = TP/(TP+FN+1e-8)
@@ -167,7 +171,7 @@ class CDGAN:
                 total_jaccard_score=np.mean(total_jaccard_score)
 
                 # 3
-                # self.sheduler_d.step()
+                self.sheduler_d.step()
                 self.sheduler_g.step() 
 #                 self.sheduler_d.step(1-total_jaccard_score)
 #                 self.sheduler_g.step(1-total_jaccard_score)
@@ -177,7 +181,6 @@ class CDGAN:
                     best_jaccard_score = total_jaccard_score
                     # 4
                     self.save_model()
-
                 #     shutil.copy(os.path.join(ct.WEIGHTS_SAVE_DIR,'current_netG.pth'),os.path.join(ct.BEST_WEIGHT_SAVE_DIR,'netG.pth'))           
                 print('current F1: {}'.format(f1))
                 print('best f1: {}'.format(best_f1))
@@ -186,13 +189,50 @@ class CDGAN:
                 with open(os.path.join(OUTPUT_PATH,'f1_score.txt'),'a') as f:
                     f.write('current epoch:{},current f1:{},best f1:{}'.format(epoch,f1,best_f1))
                     f.write("jaccard score:{}".format(total_jaccard_score))
-                    f.write('\n')   
+                    f.write('\n')  
+    def test(self):
+        print('Testing.................')
+        self.load_model()
+        self.netg.eval()
+        with torch.no_grad(): 
+          TP = 0
+          FN = 0
+          FP = 0
+          TN = 0
+          total_jaccard_score=[]
+          for k, data in enumerate(self.test_dataloader):
+              x1, x2, label = data
+              x1 = x1.to(DEVICE, dtype=torch.float)
+              x2 = x2.to(DEVICE, dtype=torch.float)
+              label = label.to(DEVICE, dtype=torch.float)
+              label = label[:,0,:,:].unsqueeze(1)
+              x = torch.cat((x1,x2),1)
+              time_i = time.time()
+              v_fake = self.netg(x)
+              tp, fp, tn, fn = f1_score(v_fake, label)   
+              TP += tp
+              FN += fn
+              TN += tn
+              FP += fp
+              jaccard_score_= compute_jaccard_index(v_fake,label)
+              total_jaccard_score+=jaccard_score_
+              save_current_images(100, label.data, v_fake.data, IM_SAVE_DIR, 'test_output_images',k)
+              del x1
+              del x2
+              del label
+              torch.cuda.empty_cache()
+          precision = TP/(TP+FP+1e-8)
+          recall = TP/(TP+FN+1e-8)
+          f1 = 2*precision*recall/(precision+recall+1e-8)
+          total_jaccard_score=np.mean(total_jaccard_score)
+          print('test F1: {}'.format(f1))
+          print('test jaccard score:{}'.format(total_jaccard_score))   
    
     def save_model(self):
         # 5
         torch.save(self.netg.state_dict(), os.path.join(OUTPUT_PATH, 'netg.pth'))
-        # torch.save(self.netd.state_dict(), os.path.join(OUTPUT_PATH, 'netd.pth'))
-        print('Discriminator saved successfully')
+        torch.save(self.netd.state_dict(), os.path.join(OUTPUT_PATH, 'netd.pth'))
+        print('generator saved successfully')
         return True
     def load_model(self):
         self.netg.load_state_dict(torch.load(os.path.join(OUTPUT_PATH, 'netg.pth')))
@@ -201,6 +241,7 @@ class CDGAN:
         return True
 if __name__ == "__main__":
     cdgan = CDGAN()
-    cdgan.train()
-    # cdgan.test()
+    # cdgan.train()
+    cdgan.test()
     
+# python -m deep_learning_technique.trainer

@@ -52,6 +52,10 @@ class CDGAN:
               del x2
               del label
               torch.cuda.empty_cache()
+          print('TP:',TP)
+          print('FP:',FP)
+          print('TN:',TN)
+          print('FN:',FN)
           precision = TP/(TP+FP+1e-8)
           recall = TP/(TP+FN+1e-8)
           f1 = 2*precision*recall/(precision+recall+1e-8)

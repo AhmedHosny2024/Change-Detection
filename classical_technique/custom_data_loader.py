@@ -19,8 +19,8 @@ class CustomDataset:
 
     def data_loader(self):
         for file_A, file_B in zip(self.files_A, self.files_B):
-            img_A = cv2.imread(os.path.join(self.folder_A, file_A))
-            img_B = cv2.imread(os.path.join(self.folder_B, file_B))
+            img_A = cv2.imread(os.path.join(self.folder_A, file_A),cv2.IMREAD_GRAYSCALE)
+            img_B = cv2.imread(os.path.join(self.folder_B, file_B),cv2.IMREAD_GRAYSCALE)
             self.images_A.append(img_A)
             self.images_B.append(img_B)
         return self.images_A,self.images_B

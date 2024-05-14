@@ -20,10 +20,11 @@ class ChangeDetection:
         print("Training the model...")
         # Perform training callings
         results=[]
-        results = post_classification_comparison(self.images_A, self.images_B)
+        # results = post_classification_comparison(self.images_A, self.images_B)
         # results = post_classification_comparison(self.images_A, self.images_B)
         # results=pca_kmeans_change(self.images_A, self.images_B)    
         # results=diff_image_simple(self.images_A, self.images_B)
+        results=cva_change(self.images_A, self.images_B)
         for i, out_image in enumerate(results):
         # Save the difference image
             filename = f"{i:04d}.png"

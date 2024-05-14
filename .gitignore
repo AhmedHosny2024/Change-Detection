@@ -170,3 +170,9 @@ cython_debug/
 /deep_learning_technique/output_rubbish_88_balanced
 test.zip
 valid.zip
+/deep_learning_technique/onserver_100_copy
+/mlruns
+/tomogan-itrOut
+/deep_learning_technique/denoiser/denoiser_models
+/deep_learning_technique/test80-512buttom
+deep_learning_technique/denoiser/models/vgg19_weights_notop.h5

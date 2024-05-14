@@ -153,7 +153,7 @@ def compute_jaccard_index(prediction, ground_truth):
 def L1_loss(input, target):
     diff = torch.abs(input - target)
     weighted_diff = L1_WEIGHT * diff * target + L0_WEIGHT * diff * (1 - target)
-    loss = torch.mean(weighted_diff)
+    loss = torch.sum(weighted_diff)
     return loss
 
 
@@ -263,8 +263,8 @@ def save_current_images(reals, fakes,save_dir,name,k,label_names):
             fakes[i][fakes[i]<=0.5] = 0
             reals[i][reals[i]>0.5] = 255
             reals[i][reals[i]<=0.5] = 0
-            cv2.imwrite(save_path+"/pre_"+label_names[i+k*8],fakes[i][0])
-            cv2.imwrite(save_path+"/gth"+label_names[i+k*8],reals[i][0])
+            cv2.imwrite(save_path+"/pre_"+label_names[i+k*BATCH_SIZE],fakes[i][0])
+            cv2.imwrite(save_path+"/gth"+label_names[i+k*BATCH_SIZE],reals[i][0])
 
 def save_weights(epoch,net,optimizer,save_path, model_name):
     checkpoint = {
