@@ -1,5 +1,6 @@
 import os
 import sys
+from threading import BrokenBarrierError
 import cv2
 import numpy as np
 import imutils
@@ -173,15 +174,18 @@ def diff_image(images_A, images_B):
     return results_img
 # Mean Jaccard Index: 0.09206747368369564
 # Mean Jaccard Index: 0.1028530606521822 78 without preprocess
+#Mean Jaccard Index: 0.07088204866644915
+
 def diff_image_simple(images_A, images_B):
     results_img=[]
     for img_A, img_B in zip(images_A, images_B):
         img_A=preprocess_image(img_A)
         img_B=preprocess_image(img_B)
         img_diff = np.array(img_A, dtype=np.float32) - np.array(img_B, dtype=np.float32)
-        img_diff= img_diff>75
+        img_diff= img_diff>35
         img_diff=img_diff.astype(np.uint8)*255
         results_img.append(img_diff)
+        break
     return results_img
 
 # Mean Jaccard Index: 0.060722311740071026
