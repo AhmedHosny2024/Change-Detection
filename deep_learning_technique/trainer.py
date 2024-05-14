@@ -7,7 +7,7 @@ from deep_learning_technique.config import *
 from torch.utils.data import Dataset, DataLoader
 from deep_learning_technique.utilties import *
 import torch.optim as optim
-from deep_learning_technique.generator_copy import Generator
+from deep_learning_technique.generator import Generator
 from deep_learning_technique.discriminator import Discriminator
 
 class CDGAN:
@@ -18,8 +18,8 @@ class CDGAN:
         self.train_dataloader = DataLoader(self.train_dataset, batch_size=BATCH_SIZE, shuffle=True)
         self.valid_dataset=custom_dataset(VAL_FOLDER_PATH,transform_type="test")
         self.valid_dataloader = DataLoader(self.valid_dataset, batch_size=BATCH_SIZE, shuffle=False)
-        self.test_dataset=custom_dataset(TEST_FOLDER_PATH,transform_type="test")
-        self.test_dataloader = DataLoader(self.test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+        # self.test_dataset=custom_dataset(TEST_FOLDER_PATH,transform_type="test")
+        # self.test_dataloader = DataLoader(self.test_dataset, batch_size=BATCH_SIZE, shuffle=False)
         #Models
         self.netg = Generator(ISIZE,NC*2, NZ, NDF, EXTRALAYERS).to(DEVICE)
         self.netd = Discriminator(ISIZE, GT_C, 1, NGF, EXTRALAYERS).to(DEVICE)
@@ -34,7 +34,7 @@ class CDGAN:
         # self.l_enc = l2_loss
         self.l_bce = nn.BCELoss() # binary classification loss try to distinguish between real and fake
         # self.l_cos = cos_loss
-        # self.dice = DiceLoss()
+        self.dice = DiceLoss()
         self.optimizer_d = optim.Adam(self.netd.parameters(), lr=LR, betas=(0.5, 0.999))
         self.optimizer_g = optim.Adam(self.netg.parameters(), lr=LR, betas=(0.5, 0.999))
 
@@ -84,9 +84,9 @@ class CDGAN:
                 pred_real = self.netd(gt)
                 pred_fake = self.netd(fake).detach()
                 err_d_fake = self.l_bce(pred_fake, fake_label)
-                # err_g = self.l_con(fake, gt)
-                err_g=L1_loss(fake,gt)
-                err_g_total = err_g*G_WEIGHT +D_WEIGHT*err_d_fake
+                err_g_1 = self.dice(fake, gt)
+                err_g_2=L1_loss(fake,gt)
+                err_g_total = (err_g_1+err_g_2)*G_WEIGHT +D_WEIGHT*err_d_fake
                 
                 pred_fake_ = self.netd(fake.detach())
                 err_d_real = self.l_bce(pred_real, real_label)
@@ -232,7 +232,7 @@ class CDGAN:
         # 5
         torch.save(self.netg.state_dict(), os.path.join(OUTPUT_PATH, 'netg.pth'))
         torch.save(self.netd.state_dict(), os.path.join(OUTPUT_PATH, 'netd.pth'))
-        print('generator saved successfully')
+        print('models saved successfully')
         return True
     def load_model(self):
         self.netg.load_state_dict(torch.load(os.path.join(OUTPUT_PATH, 'netg.pth')))
@@ -241,7 +241,7 @@ class CDGAN:
         return True
 if __name__ == "__main__":
     cdgan = CDGAN()
-    # cdgan.train()
-    cdgan.test()
+    cdgan.train()
+    # cdgan.test()
     
 # python -m deep_learning_technique.trainer

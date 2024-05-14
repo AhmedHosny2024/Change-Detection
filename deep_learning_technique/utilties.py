@@ -153,7 +153,7 @@ def compute_jaccard_index(prediction, ground_truth):
 def L1_loss(input, target):
     diff = torch.abs(input - target)
     weighted_diff = L1_WEIGHT * diff * target + L0_WEIGHT * diff * (1 - target)
-    loss = torch.sum(weighted_diff)
+    loss = torch.mean(weighted_diff)
     return loss
 
 
@@ -265,6 +265,29 @@ def save_current_images(reals, fakes,save_dir,name,k,label_names):
             reals[i][reals[i]<=0.5] = 0
             cv2.imwrite(save_path+"/pre_"+label_names[i+k*BATCH_SIZE],fakes[i][0])
             cv2.imwrite(save_path+"/gth"+label_names[i+k*BATCH_SIZE],reals[i][0])
+
+def save_test_images(fakes,save_dir,name,k):
+        """ Save images for epoch i.
+
+        Args:
+            epoch ([int])        : Current epoch
+            reals ([FloatTensor]): Real Image
+            fakes ([FloatTensor]): Fake Image
+            fixed ([FloatTensor]): Fixed Fake Image
+        """
+        save_path = os.path.join(save_dir,name)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        # make fakes to cpu
+        fakes = fakes.detach().cpu().numpy()
+        reals = reals.detach().cpu().numpy()
+        # make fakes binary
+        for i in range(fakes.shape[0]):
+            fakes[i][fakes[i]>0.5] = 255
+            fakes[i][fakes[i]<=0.5] = 0
+            reals[i][reals[i]>0.5] = 255
+            reals[i][reals[i]<=0.5] = 0
+            cv2.imwrite(save_path+"/"+str(i+k*BATCH_SIZE),fakes[i][0])
 
 def save_weights(epoch,net,optimizer,save_path, model_name):
     checkpoint = {

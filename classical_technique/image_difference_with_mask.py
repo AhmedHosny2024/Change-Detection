@@ -102,8 +102,8 @@ folder_B = "trainval/B"
 output_folder = "difference_images"
 label_folder = "trainval/label"
 
-# image_differencing(folder_A, folder_B, output_folder)
-# compute_jaccard_index(output_folder, label_folder)
+image_differencing(folder_A, folder_B, output_folder)
+compute_jaccard_index(output_folder, label_folder)
 
 
 def tune_parameters(folder_A, folder_B):
@@ -135,4 +135,4 @@ def tune_parameters(folder_A, folder_B):
 
     return best_params
 
-tune_parameters(folder_A,folder_B)
+# tune_parameters(folder_A,folder_B)
