@@ -11,7 +11,7 @@ import mlflow
 from deep_learning_technique.denoiser.utils import *
 from deep_learning_technique.denoiser.models.gan_model import TomoGAN
 from deep_learning_technique.denoiser.options.train_option import TrainOptions
-from deep_learning_technique.denoiser.data_loader.custom_dataset import CustomDataset
+from deep_learning_technique.denoiser.data_loader.custom_dataset import Custom_dataset as CustomDataset
 
 class DenoiserTrainer():
     def __init__(self):

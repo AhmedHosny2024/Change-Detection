@@ -4,8 +4,8 @@ import torch
 TRAIN_FOLDER_PATH = 'trainval/train_onserver'
 TEST_FOLDER_PATH = 'trainval/deliverable/test'
 VAL_FOLDER_PATH = 'trainval/validation_onsever'
-OUTPUT_PATH = 'deep_learning_technique/deliverables/try'
-IM_SAVE_DIR ='deep_learning_technique/deliverables/try'
+OUTPUT_PATH = 'deep_learning_technique/deliverables'
+IM_SAVE_DIR ='deep_learning_technique/deliverables'
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -36,7 +36,7 @@ L0_WEIGHT = 1     # target 0 weight
 
 # networks configuration
 NC = 3     # input image channel size 
-NZ = 1024        # size of the latent z vector
+NZ = 100        # size of the latent z vector
 NDF = 64        # the dimension size of the first convolutional of the generator
 NGF = 64        # the dimension size of the first convolutional of the discriminator
 EXTRALAYERS = 3 # add extral layers for the generator and discriminator

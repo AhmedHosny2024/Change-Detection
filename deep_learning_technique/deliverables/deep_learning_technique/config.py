@@ -1,14 +1,13 @@
 import torch
 
 
-TRAIN_FOLDER_PATH = 'trainval/train_onserver'
-TEST_FOLDER_PATH = 'trainval/deliverable/test'
-VAL_FOLDER_PATH = 'trainval/validation_onsever'
-OUTPUT_PATH = 'deep_learning_technique/deliverables/try'
-IM_SAVE_DIR ='deep_learning_technique/deliverables/try'
+TRAIN_FOLDER_PATH = 'trainval/r'
+TEST_FOLDER_PATH = 'testset/test'
+VAL_FOLDER_PATH = 'trainval/validation'
+OUTPUT_PATH = 'output'
+IM_SAVE_DIR ='output'
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 # training configuration
 EPOCH = 50
 ISIZE = 256         # input image size
@@ -41,4 +40,4 @@ NDF = 64        # the dimension size of the first convolutional of the generator
 NGF = 64        # the dimension size of the first convolutional of the discriminator
 EXTRALAYERS = 3 # add extral layers for the generator and discriminator
 Z_SIZE = 16
-GT_C = 1    # the channel size of ground truth
+GT_C = 1    # the channel size of ground truth   # the channel size of ground truth
